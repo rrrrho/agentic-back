@@ -1,0 +1,16 @@
+[project]
+name = "agentic-back"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]>=0.115.8",
+    "langchain<=0.2.0",
+    "langchain-core>=0.3.34",
+    "langchain-groq>=0.2.4",
+    "langgraph>=0.2.70",
+    "pydantic>=1.10.25",
+    "pydantic-settings>=2.7.1",
+    "uvicorn>=0.40.0",
+]
