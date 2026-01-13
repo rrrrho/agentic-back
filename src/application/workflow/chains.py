@@ -1,4 +1,5 @@
 from langchain_groq import ChatGroq
+from langchain_core.runnables import RunnableSequence
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from src.config import settings
 from src.domain.prompts import CHARACTER_CARD
@@ -10,7 +11,7 @@ def get_chat_model(temperature: float = 0.7, model_name: str = settings.GROQ_LLM
         temperature=temperature,
     )
 
-def get_response_chain():
+def get_response_chain() -> RunnableSequence:
     '''
     injects state variables into prompt template and adds message historial to context
 
@@ -29,4 +30,5 @@ def get_response_chain():
         template_format='jinja2'
     )
 
+    # take prompt output and insert it as an input to the model. pipeline ready to use.
     return prompt | model
