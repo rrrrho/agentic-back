@@ -2,7 +2,7 @@ from langchain_groq import ChatGroq
 from langchain_core.runnables import RunnableSequence
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from src.config import settings
-from src.domain.prompts import PERSONALITY_CARD
+from src.domain.prompts import EXTEND_SUMMARY_PROMPT, PERSONALITY_CARD, SUMMARY_PROMPT
 
 def get_chat_model(temperature: float = 0.7, model_name: str = settings.GROQ_LLM_MODEL) -> ChatGroq:
     return ChatGroq(
@@ -31,4 +31,19 @@ def get_response_chain() -> RunnableSequence:
     )
 
     # take prompt output and insert it as an input to the model. pipeline ready to use.
+    return prompt | model
+
+def get_conversation_summary_chain(summary: str = '') -> RunnableSequence:
+    model = get_chat_model(model_name=settings.GROQ_SUMMARY_LLM_MODEL)
+
+    summary_message = EXTEND_SUMMARY_PROMPT if summary else SUMMARY_PROMPT
+
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            MessagesPlaceholder(variable_name='messages'),
+            ('human', summary_message.prompt)
+        ],
+        template_format='jinja2'
+    )
+
     return prompt | model

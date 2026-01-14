@@ -23,7 +23,6 @@ PERSONALITY_CARD = Prompt(
     prompt=__PERSONALITY_CARD
 )
 
-# summary
 __SUMMARY_PROMPT = """Create a summary of the conversation between you and the user.
 The summary must be a short description of the conversation so far, but that also captures all the
 relevant information shared between you and the user: """
@@ -31,4 +30,15 @@ relevant information shared between you and the user: """
 SUMMARY_PROMPT = Prompt(
     name="summary_prompt",
     prompt=__SUMMARY_PROMPT,
+)
+
+__EXTEND_SUMMARY_PROMPT = """This is a summary of the conversation to date between you and the user:
+
+{{summary}}
+
+Extend the summary by taking into account the new messages above: """
+
+EXTEND_SUMMARY_PROMPT = Prompt(
+    name="extend_summary_prompt",
+    prompt=__EXTEND_SUMMARY_PROMPT,
 )

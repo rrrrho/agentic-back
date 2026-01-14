@@ -1,7 +1,9 @@
 from langchain_core.runnables import RunnableConfig
+from langchain_core.messages import RemoveMessage
 
-from src.application.workflow.chains import get_response_chain
+from src.application.workflow.chains import get_conversation_summary_chain, get_response_chain
 from src.domain.state import CustomState
+from src.config import settings
 
 
 async def conversation_node(state: CustomState, config: RunnableConfig) -> CustomState:
@@ -41,3 +43,21 @@ async def conversation_node(state: CustomState, config: RunnableConfig) -> Custo
 
     # updates list of messages
     return { 'messages': response }
+
+async def summarize_conversation_node(state: CustomState) -> CustomState:
+    summary = state.get('summary', '')
+    summarize_conversation_chain = get_conversation_summary_chain(summary)
+
+    response = await summarize_conversation_chain.ainvoke(
+        {
+            'messages': state['messages'],
+            'summary': summary
+        }
+    )
+
+    delete_messages = [
+        RemoveMessage(id=m.id)
+        for m in state['messages'][: -settings.TOTAL_MESSAGES_AFTER_SUMMARY]
+    ]
+
+    return { 'summary': response.content, 'messages': delete_messages }
