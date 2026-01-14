@@ -2,7 +2,7 @@ from langchain_groq import ChatGroq
 from langchain_core.runnables import RunnableSequence
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from src.config import settings
-from src.domain.prompts import CHARACTER_CARD
+from src.domain.prompts import PERSONALITY_CARD
 
 def get_chat_model(temperature: float = 0.7, model_name: str = settings.GROQ_LLM_MODEL) -> ChatGroq:
     return ChatGroq(
@@ -20,7 +20,7 @@ def get_response_chain() -> RunnableSequence:
         ChatGroq
     '''
     model = get_chat_model();
-    system_message = CHARACTER_CARD
+    system_message = PERSONALITY_CARD
 
     prompt = ChatPromptTemplate.from_messages(
         [
