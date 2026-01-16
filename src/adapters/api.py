@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import uuid
 from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,8 +38,13 @@ async def chat(websocket: WebSocket):
                 )
                 continue
 
+            if 'thread_id' not in data:
+                thread_id = str(uuid.uuid4())
+            else:
+                thread_id = data['thread_id']
+
             try:
-                response_stream = get_response(messages=data['message'])
+                response_stream = get_response(messages=data['message'], thread_id=thread_id)
 
                 await websocket.send_json({ 'streaming': True })
 
@@ -48,7 +54,7 @@ async def chat(websocket: WebSocket):
                     await websocket.send_json({ 'chunk': chunk })
 
                 await websocket.send_json(
-                    { 'response': full_response, 'streaming': False }
+                    { 'response': full_response, 'streaming': False, 'thread_id': thread_id }
                 )
 
             except Exception as err:
