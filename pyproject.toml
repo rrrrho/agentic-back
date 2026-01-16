@@ -5,12 +5,17 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "beautifulsoup4>=4.14.3",
     "fastapi[standard]>=0.115.8",
-    "langchain<=0.2.0",
+    "langchain-community>=0.4.1",
     "langchain-core>=0.3.34",
     "langchain-groq>=0.2.4",
+    "langchain-mongodb>=0.4.0",
+    "langchain-huggingface>=1.2.0",
     "langgraph>=0.2.70",
+    "playwright>=1.57.0",
     "pydantic>=1.10.25",
     "pydantic-settings>=2.7.1",
+    "rich>=14.2.0",
     "uvicorn>=0.40.0",
 ]

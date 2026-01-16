@@ -1,0 +1,7 @@
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_mongodb import MongoDBAtlasVectorSearch
+from langchain_mongodb.retrievers import MongoDBAtlasHybridSearchRetriever
+
+from src.config import settings
+
+Retriever = MongoDBAtlasHybridSearchRetriever
