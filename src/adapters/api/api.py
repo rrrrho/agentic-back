@@ -3,14 +3,41 @@ import uuid
 from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from src.application.workflow.long_term_memory_int import create_retrieve_context_tool
+from src.config import settings
+from langgraph.checkpoint.mongodb.aio import AsyncMongoDBSaver
 
-from src.application.workflow.generate_response import get_response
+from src.adapters.api.dependencies import get_compiled_graph
+from src.application.workflow.generate_response import Agent
+from src.infrastructure.database.client import MongoClientWrapper
+from src.infrastructure.database.embeddings import get_hugging_face_embedding
+from src.infrastructure.database.splitters import get_splitter
+from src.infrastructure.database.vector_stores import get_mongo_vector_store
+from src.infrastructure.tools.long_term_memory_tool import LongTermMemoryTool
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """handles startup and shutdown events for the API."""
-    # startup code (if any) goes here
-    yield
+    db_client = MongoClientWrapper(model=BaseModel, database_name=settings.MONGO_DB_NAME)
+
+    async with db_client:
+    
+        checkpointer = db_client.get_checkpointer()
+
+        embedding = get_hugging_face_embedding(model_id=settings.RAG_TEXT_EMBEDDING_MODEL_ID, device=settings.RAG_DEVICE)
+        vector_store = get_mongo_vector_store(embedding=embedding)
+        splitter = get_splitter(chunk_size=settings.RAG_CHUNK_SIZE)
+
+        rag_tool = LongTermMemoryTool(vector_store=vector_store, splitter=splitter)
+        tools = [create_retrieve_context_tool(retriever=rag_tool)]
+
+
+        graph = get_compiled_graph(checkpointer=checkpointer, tools=tools)
+        app.state.agent = Agent(graph=graph)
+
+
+        yield
 
 app = FastAPI(lifespan=lifespan)
 
@@ -44,7 +71,7 @@ async def chat(websocket: WebSocket):
                 thread_id = data['thread_id']
 
             try:
-                response_stream = get_response(messages=data['message'], thread_id=thread_id)
+                response_stream = websocket.app.state.agent.get_response(messages=data['message'], thread_id=thread_id)
 
                 await websocket.send_json({ 'streaming': True })
 

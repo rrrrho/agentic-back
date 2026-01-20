@@ -8,10 +8,10 @@ def get_chat_model(temperature: float = 0.7, model_name: str = settings.GROQ_LLM
     return ChatGroq(
         api_key=settings.GROQ_API_KEY,
         model_name=model_name,
-        temperature=temperature,
+        temperature=temperature
     )
 
-def get_response_chain() -> RunnableSequence:
+def get_response_chain(tools: list) -> RunnableSequence:
     '''
     injects state variables into prompt template and adds message historial to context
 
@@ -20,6 +20,7 @@ def get_response_chain() -> RunnableSequence:
         ChatGroq
     '''
     model = get_chat_model();
+    model = model.bind_tools(tools)
     system_message = PERSONALITY_CARD
 
     prompt = ChatPromptTemplate.from_messages(
