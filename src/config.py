@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     # --- GROQ Configuration ---
     GROQ_API_KEY: str
-    GROQ_LLM_MODEL: str = 'llama-3.3-70b-versatile'
+    GROQ_LLM_MODEL: str = 'meta-llama/llama-4-scout-17b-16e-instruct'
     GROQ_SUMMARY_LLM_MODEL: str = 'llama-3.1-8b-instant'
 
     # --- MongoDB Configuration ---
@@ -24,12 +24,12 @@ class Settings(BaseSettings):
     TOTAL_MESSAGES_AFTER_SUMMARY: int = 5
     TOTAL_MESSAGES_SUMMARY_TRIGGER: int = 30
 
-    RAG_TEXT_EMBEDDING_MODEL_ID: str = "sentence-transformers/all-MiniLM-L6-v2"
-    RAG_TEXT_EMBEDDING_MODEL_DIM: int = 384
+    RAG_TEXT_EMBEDDING_MODEL_ID: str = "Qwen/Qwen3-Embedding-0.6B"
+    RAG_TEXT_EMBEDDING_MODEL_DIM: int = 1024
     RAG_TOP_K: int = 3
     RAG_DEVICE: str = "cpu"
     RAG_CHUNK_SIZE: int = 256
-    RAG_SCORE_THRESHOLD: float = 0.7
+    RAG_SCORE_THRESHOLD: float = 1
 
 
 settings = Settings()

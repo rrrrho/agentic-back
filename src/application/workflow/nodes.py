@@ -3,16 +3,14 @@ from langchain_core.messages import RemoveMessage
 from langgraph.prebuilt import ToolNode
 from langchain_core.tools import BaseTool
 
-from src.application.workflow.chains import get_conversation_summary_chain, get_response_chain
+from src.application.workflow.chains import get_context_summary_chain, get_conversation_summary_chain, get_response_chain
 from src.domain.state import CustomState
 from src.config import settings
 
 def make_retriever_node(tools: list[BaseTool]):
     return ToolNode(tools)
 
-def make_conversation_node(tools: list[BaseTool]):
-
-    conversation_chain = get_response_chain(tools=tools)
+def make_conversation_node(llm, tools: list[BaseTool]):
 
     async def conversation_node(state: CustomState, config: RunnableConfig) -> CustomState:
         '''
@@ -30,7 +28,10 @@ def make_conversation_node(tools: list[BaseTool]):
             CustomState: our state which travels through the pipeline.
         '''
         summary = state.get('summary', '')
+        context = state.get('context', '')
+        conversation_chain = get_response_chain(llm, tools=tools)
 
+        print(context)
         '''
         response example:
 
@@ -43,33 +44,60 @@ def make_conversation_node(tools: list[BaseTool]):
         response = await conversation_chain.ainvoke(
             {
                 'messages': state['messages'],
-                'summary': summary
+                'summary': summary,
+                'context': context 
             },
             config
         )
+
 
         # updates list of messages
         return { 'messages': response }
     
     return conversation_node
 
-async def summarize_conversation_node(state: CustomState) -> CustomState:
-    summary = state.get('summary', '')
-    summarize_conversation_chain = get_conversation_summary_chain(summary)
+def make_summarize_conversation_node(llm):
 
-    response = await summarize_conversation_chain.ainvoke(
-        {
-            'messages': state['messages'],
-            'summary': summary
-        }
-    )
+    async def summarize_conversation_node(state: CustomState) -> CustomState:
+        summary = state.get('summary', '')
+        summarize_conversation_chain = get_conversation_summary_chain(llm, summary)
 
-    delete_messages = [
-        RemoveMessage(id=m.id)
-        for m in state['messages'][: -settings.TOTAL_MESSAGES_AFTER_SUMMARY]
-    ]
+        response = await summarize_conversation_chain.ainvoke(
+            {
+                'messages': state['messages'],
+                'summary': summary
+            }
+        )
 
-    return { 'summary': response.content, 'messages': delete_messages }
+        delete_messages = [
+            RemoveMessage(id=m.id)
+            for m in state['messages'][: -settings.TOTAL_MESSAGES_AFTER_SUMMARY]
+        ]
+
+        return { 'summary': response.content, 'messages': delete_messages }
+    
+    return summarize_conversation_node
+
+def make_context_summary_node(llm):
+
+    async def context_summary_node(state: CustomState) -> CustomState:
+        context_summary_chain = get_context_summary_chain(llm)
+
+        user_query = next(
+            (m.content for m in reversed(state['messages']) if m.type == 'human'), 
+            "información general"
+        )
+
+        response = await context_summary_chain.ainvoke(
+            {
+                'query': user_query,
+                'context': state['messages'][-1].content,
+            }
+        )
+
+        return { 'context': response.content }
+    
+    return context_summary_node
 
 async def connector_node(state: CustomState):
     return {}

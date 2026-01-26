@@ -9,7 +9,7 @@ class Agent:
 
     async def get_response(self, messages: str | list[str] | list[dict[str, any]], thread_id: str) -> AsyncGenerator[str, None]:
                 
-        config = { "configurable": { "thread_id": thread_id } }
+        config = { "configurable": { "thread_id": thread_id }, "recursion_limit": 8 }
 
         # asStream emits events for every action the agent performs. doesn't wait for end result.
         async for chunk in self.graph.astream(
@@ -18,7 +18,7 @@ class Agent:
             stream_mode = 'messages'):
                 
                 # filters non content (it emits technical events)
-                if chunk[1]['langgraph_node'] == 'conversation_node' and isinstance(chunk[0], AIMessageChunk):
+                if chunk[1]['langgraph_node'] == 'conversation_node' and isinstance(chunk[0], AIMessageChunk) and chunk[0].content != '':
                     # sends text fragments until response is fully completed
                     yield chunk[0].content
 

@@ -1,17 +1,9 @@
 from langchain_groq import ChatGroq
 from langchain_core.runnables import RunnableSequence
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from src.config import settings
-from src.domain.prompts import EXTEND_SUMMARY_PROMPT, PERSONALITY_CARD, SUMMARY_PROMPT
+from src.domain.prompts import CONTEXT_SUMMARY_PROMPT, EXTEND_SUMMARY_PROMPT, PERSONALITY_CARD, SUMMARY_PROMPT
 
-def get_chat_model(temperature: float = 0.7, model_name: str = settings.GROQ_LLM_MODEL) -> ChatGroq:
-    return ChatGroq(
-        api_key=settings.GROQ_API_KEY,
-        model_name=model_name,
-        temperature=temperature
-    )
-
-def get_response_chain(tools: list) -> RunnableSequence:
+def get_response_chain(llm, tools: list) -> RunnableSequence:
     '''
     injects state variables into prompt template and adds message historial to context
 
@@ -19,8 +11,8 @@ def get_response_chain(tools: list) -> RunnableSequence:
         ChatPromptTemplate
         ChatGroq
     '''
-    model = get_chat_model();
-    model = model.bind_tools(tools)
+
+    llm_with_tools = llm.bind_tools(tools)
     system_message = PERSONALITY_CARD
 
     prompt = ChatPromptTemplate.from_messages(
@@ -32,10 +24,9 @@ def get_response_chain(tools: list) -> RunnableSequence:
     )
 
     # take prompt output and insert it as an input to the model. pipeline ready to use.
-    return prompt | model
+    return prompt | llm_with_tools
 
-def get_conversation_summary_chain(summary: str = '') -> RunnableSequence:
-    model = get_chat_model(model_name=settings.GROQ_SUMMARY_LLM_MODEL)
+def get_conversation_summary_chain(llm, summary: str = '') -> RunnableSequence:
 
     summary_message = EXTEND_SUMMARY_PROMPT if summary else SUMMARY_PROMPT
 
@@ -47,4 +38,15 @@ def get_conversation_summary_chain(summary: str = '') -> RunnableSequence:
         template_format='jinja2'
     )
 
-    return prompt | model
+    return prompt | llm
+
+def get_context_summary_chain(llm):
+
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("human", CONTEXT_SUMMARY_PROMPT.prompt),
+        ],
+        template_format="jinja2",
+    )
+
+    return prompt | llm
