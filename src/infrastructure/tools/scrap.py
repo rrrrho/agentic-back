@@ -4,8 +4,8 @@ from src.application.memory.scraper import ScrapText, ScraperInterface
 from bs4 import BeautifulSoup
 
 
-class SearXNGWebSearchEngine(ScraperInterface):
-    def scrap(self, query: str) -> str:
+class SearXNGWebSearchEngine():
+    def web_search(self, query: str) -> str:
         url = "http://localhost:8888/search"
         payload = {
             "q": query,

@@ -12,7 +12,6 @@ MEMORY AND CONTEXT:
 2. If the user asks "Do you remember my name?" or mentions something said previously, you MUST look for that information in the previous messages.
 3. Always maintain continuity and coherence in the conversation.
 4. Use this information to respond if it is available: {{context}}
-5. If the context received does not contain relevant information to answer the question, do not assume, call the tool.
 
 RESPONSE STYLE:
 - Be concise, clear, and direct.
@@ -52,4 +51,35 @@ __CONTEXT_SUMMARY_PROMPT = """Your task is to summarize the following informatio
 CONTEXT_SUMMARY_PROMPT = Prompt(
     name="context_summary_prompt",
     prompt=__CONTEXT_SUMMARY_PROMPT,
+)
+
+__ROUTER_PROMPT = """
+You are a routing agent. Your ONLY job is to decide if a tool call is strictly necessary.
+
+RULES:
+1. If the user greets (hello, hi), asks "how are you?", or chats casually: DO NOT call any tool. Respond directly.
+2. If the user asks a question that requires factual knowledge not in the chat history: Call the search tool.
+3. If the attempts are > 0: You MUST use the web search tool.
+
+User request: {{user_query}}
+Attempts: {{retry_count}}
+"""
+
+ROUTER_PROMPT = Prompt(
+    name="router_prompt",
+    prompt=__ROUTER_PROMPT,
+)
+
+__CONTEXT_VALIDATION_PROMPT = """
+Your task is to validate whether the context answers the user's query. 
+Respond only with the word PASS if it passes the verification, and with the word FAILED if it does not:
+
+Context: {{context}}
+
+Query: {{user_query}}
+"""
+
+CONTEXT_VALIDATION_PROMPT = Prompt(
+    name="context_validation_prompt",
+    prompt=__CONTEXT_VALIDATION_PROMPT,
 )

@@ -5,32 +5,31 @@ from src.application.memory.scraper import ScraperInterface
 from src.config import settings
 
 class LongTermMemoryTool(LongMemoryToolInterface):
-    def __init__(self, vector_store: VectorStore, retriever, splitter: TextSplitter, scraper: ScraperInterface):
+    def __init__(self, vector_store: VectorStore, retriever, splitter: TextSplitter, web_search_engine):
         self.vector_store = vector_store
         self.splitter = splitter
         self.retriever = retriever
-        self.scraper = scraper
+        self.web_search_engine = web_search_engine
 
-    async def retrieve_context(self, query: str):
+    async def search_database(self, query: str):
         docs = self.retriever.invoke(input=query)
 
-        score = 0
-        if docs:
-            score = docs[0].metadata['score']
-
-        print('\n\nSCORE: ', score, '\n\n')
-        if not docs or score < settings.RAG_SCORE_THRESHOLD:
-
-            results = self.scraper.scrap(query=query)
-
-            context = []
-            for result in results:
-
-                docs = self.splitter.create_documents([result.text], [result.metadata])
-                context.extend(docs)
-
-            await self.vector_store.aadd_documents(context)
-
-            return context
+        print('\nDOCS: ', docs, '\n')
 
         return docs
+    
+    async def web_search(self, query: str):
+        print('\QUERY: ', query, '\n')
+        results = self.web_search_engine.web_search(query=query)
+
+        print('\nWEB: ', results, '\n')
+
+        context = []
+        for result in results:
+
+            docs = self.splitter.create_documents([result.text], [result.metadata])
+            context.extend(docs)
+
+        await self.vector_store.aadd_documents(context)
+
+        return context

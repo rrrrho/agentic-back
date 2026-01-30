@@ -10,3 +10,11 @@ def should_summarize_conversation(state: CustomState) -> Literal['summarize_conv
         return 'summarize_conversation_node'
     
     return END
+
+def should_retry(state: CustomState) -> Literal['summarize_context_node', 'router_node']:
+    validation_status = state['validation_status']
+
+    if validation_status == 'PASS':
+        return 'summarize_context_node'
+    
+    return 'router_node'

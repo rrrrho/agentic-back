@@ -3,23 +3,39 @@ from langchain_core.tools import tool
 
 class LongMemoryToolInterface(ABC):
     @abstractmethod
-    async def retrieve_context(self, query: str):
+    async def search_database(self, query: str):
         pass
 
-def create_retrieve_context_tool(retriever: LongMemoryToolInterface):
+    @abstractmethod
+    async def web_search(self, query: str):
+        pass
+
+def create_search_database_tool(retriever: LongMemoryToolInterface):
 
     @tool
-    async def retrieve_context(query: str):
+    async def search_database(query: str):
         '''
-        ALWAYS use this tool whenever the user asks about news, current events, 
-        sports results, or facts that occurred after your training cutoff date and you do not 
-        have the information to answer. 
-        DO NOT try to guess current information. 
+        Use this tool to perform a search in the vector database based on the provided query.
         '''
-        docs = await retriever.retrieve_context(query=query)
+        docs = await retriever.search_database(query=query)
 
         if isinstance(docs, list):
             return "\n\n".join([doc.page_content for doc in docs])
         return str(docs)
     
-    return retrieve_context
+    return search_database
+
+def create_web_search_tool(retriever: LongMemoryToolInterface):
+
+    @tool
+    async def web_search(query: str):
+        '''
+        Use this tool to perform a web search based on the provided query.
+        '''
+        docs = await retriever.web_search(query=query)
+
+        if isinstance(docs, list):
+            return "\n\n".join([doc.page_content for doc in docs])
+        return str(docs)
+    
+    return web_search

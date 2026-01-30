@@ -3,7 +3,7 @@ import uuid
 from pydantic import BaseModel
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from src.application.memory.long_term_memory_int import create_retrieve_context_tool, create_web_search_context_tool
+from src.application.memory.long_term_memory_int import create_search_database_tool, create_web_search_tool
 from src.config import settings
 
 from src.adapters.api.dependencies import get_compiled_graph
@@ -16,7 +16,6 @@ from src.infrastructure.database.vector_stores import get_mongo_vector_store
 from src.infrastructure.llm.providers import get_groq_chat_model
 from src.infrastructure.tools.long_term_memory_tool import LongTermMemoryTool
 from src.infrastructure.tools.scrap import SearXNGWebSearchEngine
-from src.infrastructure.tools.scrapers import CNNScraper
 
 
 @asynccontextmanager
@@ -32,10 +31,10 @@ async def lifespan(app: FastAPI):
         vector_store = get_mongo_vector_store(embedding=embedding)
         splitter = get_splitter(chunk_size=settings.RAG_CHUNK_SIZE)
         retriever = get_mongo_hybrid_search_retriever(vector_store=vector_store)
-        scraper = SearXNGWebSearchEngine()
+        web_search_engine = SearXNGWebSearchEngine()
 
-        rag_tool = LongTermMemoryTool(vector_store=vector_store, splitter=splitter, retriever=retriever, scraper=scraper)
-        tools = [create_retrieve_context_tool(retriever=rag_tool), create_web_search_context_tool(retriever=rag_tool)]
+        rag_tool = LongTermMemoryTool(vector_store=vector_store, splitter=splitter, retriever=retriever, web_search_engine=web_search_engine)
+        tools = [create_search_database_tool(retriever=rag_tool), create_web_search_tool(retriever=rag_tool)]
 
         llm = get_groq_chat_model(temperature=0.7, model_name=settings.GROQ_LLM_MODEL)
         poor_llm = get_groq_chat_model(temperature=0.7, model_name=settings.GROQ_SUMMARY_LLM_MODEL)

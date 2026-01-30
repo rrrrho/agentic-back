@@ -3,14 +3,72 @@ from langchain_core.messages import RemoveMessage
 from langgraph.prebuilt import ToolNode
 from langchain_core.tools import BaseTool
 
-from src.application.workflow.chains import get_context_summary_chain, get_conversation_summary_chain, get_response_chain
+from src.application.workflow.chains import get_context_summary_chain, get_context_validation_chain, get_conversation_summary_chain, get_response_chain, get_router_chain
 from src.domain.state import CustomState
 from src.config import settings
 
 def make_retriever_node(tools: list[BaseTool]):
     return ToolNode(tools)
 
-def make_conversation_node(llm, tools: list[BaseTool]):
+def make_router_node(llm, tools: list[BaseTool]):
+
+    async def router_node(state: CustomState, config: RunnableConfig) -> CustomState:
+        retries = state.get('retry_count', 0)
+        user_query = state.get('user_query', '')
+
+        if not user_query:
+            user_query = next(
+                (m.content for m in reversed(state['messages']) if m.type == 'human'), 
+                "información general"
+            )
+
+        router_chain = get_router_chain(llm, tools=tools)
+
+        response = await router_chain.ainvoke(
+            {
+                'messages': state['messages'],
+                'user_query': user_query,
+                'retry_count': retries
+            },
+            config
+        )
+
+        if response.tool_calls:
+            return { 'messages': response, 'user_query': user_query }
+        
+        return { 'user_query': user_query }
+    
+    return router_node
+
+def make_context_validation_node(llm):
+
+    async def context_validation_node(state: CustomState) -> CustomState:
+        context = state['messages'][-1].content
+        RemoveMessage(id=state['messages'][-1].id)
+
+        retry_count = state.get('retry_count', 0)
+        user_query = state['user_query']
+
+        context_validation_chain = get_context_validation_chain(llm)
+
+        response = await context_validation_chain.ainvoke(
+            {
+                'messages': state['messages'],
+                'user_query': user_query,
+                'context': context
+            }
+        )
+
+        print('\nVALIDATION: ', response.content, '\n')
+
+        retries = retry_count + 1 if response.content == 'FAILED' else retry_count
+
+        return { 'validation_status': response.content, 'retry_count': retries, 'context': context }
+    
+    return context_validation_node
+
+
+def make_conversation_node(llm):
 
     async def conversation_node(state: CustomState, config: RunnableConfig) -> CustomState:
         '''
@@ -29,9 +87,8 @@ def make_conversation_node(llm, tools: list[BaseTool]):
         '''
         summary = state.get('summary', '')
         context = state.get('context', '')
-        conversation_chain = get_response_chain(llm, tools=tools)
+        conversation_chain = get_response_chain(llm)
 
-        print(context)
         '''
         response example:
 
@@ -50,9 +107,9 @@ def make_conversation_node(llm, tools: list[BaseTool]):
             config
         )
 
-
+        print(state['messages'])
         # updates list of messages
-        return { 'messages': response }
+        return { 'messages': response, 'user_query': '', 'context': '' }
     
     return conversation_node
 
@@ -81,17 +138,14 @@ def make_summarize_conversation_node(llm):
 def make_context_summary_node(llm):
 
     async def context_summary_node(state: CustomState) -> CustomState:
+        context = state['context']
         context_summary_chain = get_context_summary_chain(llm)
-
-        user_query = next(
-            (m.content for m in reversed(state['messages']) if m.type == 'human'), 
-            "información general"
-        )
+        user_query = state['user_query']
 
         response = await context_summary_chain.ainvoke(
             {
                 'query': user_query,
-                'context': state['messages'][-1].content,
+                'context': context,
             }
         )
 
