@@ -3,6 +3,7 @@ import uuid
 from pydantic import BaseModel
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+import socketio
 from src.application.memory.long_term_memory_int import create_search_database_tool, create_web_search_tool
 from src.config import settings
 
@@ -44,9 +45,9 @@ async def lifespan(app: FastAPI):
 
         yield
 
-app = FastAPI(lifespan=lifespan)
+fastapi_app = FastAPI(lifespan=lifespan)
 
-app.add_middleware(
+fastapi_app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
@@ -54,46 +55,55 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.websocket('/chat')
-async def chat(websocket: WebSocket):
-    await websocket.accept()
+sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
+app = socketio.ASGIApp(sio, fastapi_app)
 
+
+@sio.event
+async def connect(sid, environ):
+    print(f"connected client: {sid}")
+
+@sio.on('chat')
+async def chat(sid, data):
     try:
-        while True:
-            data = await websocket.receive_json()
+        if 'message' not in data:
+            await sio.emit('error',
+                {
+                    "error": "invalid message format. required fields: 'message'"
+                },
+                to=sid
+            )
+            return
 
-            if 'message' not in data:
-                await websocket.send_json(
-                    {
-                        "error": "invalid message format. required fields: 'message'"
-                    }
-                )
-                continue
+        if 'thread_id' not in data:
+            thread_id = str(uuid.uuid4())
+        else:
+            thread_id = data['thread_id']
 
-            if 'thread_id' not in data:
-                thread_id = str(uuid.uuid4())
-            else:
-                thread_id = data['thread_id']
+        try:
+            response_stream = fastapi_app.state.agent.get_response(messages=data['message'], thread_id=thread_id)
 
-            try:
-                response_stream = websocket.app.state.agent.get_response(messages=data['message'], thread_id=thread_id)
+            await sio.emit('status', { 'streaming': True }, to=sid)
 
-                await websocket.send_json({ 'streaming': True })
+            full_response = ''
+            async for chunk in response_stream:
+                full_response += chunk
+                await sio.emit('chunk', { 'text': chunk }, to=sid)
 
-                full_response = ''
-                async for chunk in response_stream:
-                    full_response += chunk
-                    await websocket.send_json({ 'chunk': chunk })
+            await sio.emit('response', 
+                { 'response': full_response, 'streaming': False, 'thread_id': thread_id }, 
+                to=sid
+            )
 
-                await websocket.send_json(
-                    { 'response': full_response, 'streaming': False, 'thread_id': thread_id }
-                )
+        except Exception as err:
+            await sio.emit('error', { 'error': str(err) }, to=sid)
 
-            except Exception as err:
-                await websocket.send_json({ 'error': str(err) })
+    except Exception as err:
+        print(err)
 
-    except WebSocketDisconnect:
-        pass
+@sio.event
+async def disconnect(sid):
+    print(f"disconnected client: {sid}")
 
 if __name__ == "__main__":
     import uvicorn
