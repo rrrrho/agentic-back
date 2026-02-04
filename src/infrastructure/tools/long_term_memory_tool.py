@@ -1,11 +1,10 @@
 from src.application.memory.long_term_memory_int import LongMemoryToolInterface
 from langchain_core.vectorstores import VectorStore
 from langchain_text_splitters.base import TextSplitter
-from src.application.memory.scraper import ScraperInterface
-from src.config import settings
+from src.application.memory.metasearch_engine_int import Metasearch
 
 class LongTermMemoryTool(LongMemoryToolInterface):
-    def __init__(self, vector_store: VectorStore, retriever, splitter: TextSplitter, web_search_engine):
+    def __init__(self, vector_store: VectorStore, retriever, splitter: TextSplitter, web_search_engine: Metasearch):
         self.vector_store = vector_store
         self.splitter = splitter
         self.retriever = retriever
@@ -27,9 +26,11 @@ class LongTermMemoryTool(LongMemoryToolInterface):
         context = []
         for result in results:
 
-            docs = self.splitter.create_documents([result.text], [result.metadata])
+            docs = self.splitter.create_documents([result['text']], [result['metadata']])
             context.extend(docs)
 
         await self.vector_store.aadd_documents(context)
 
-        return context
+        fragments = await self.search_database(query=query)
+
+        return fragments

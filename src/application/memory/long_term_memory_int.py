@@ -30,7 +30,9 @@ def create_web_search_tool(retriever: LongMemoryToolInterface):
     @tool
     async def web_search(query: str):
         '''
-        Use this tool to perform a web search based on the provided query.
+        Use this tool to perform a web search based on the provided input query.
+        Args:
+            query (str): what you want to recopile information.
         '''
         docs = await retriever.web_search(query=query)
 

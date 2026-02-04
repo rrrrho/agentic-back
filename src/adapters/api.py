@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.application.memory.long_term_memory_int import create_search_database_tool, create_web_search_tool
 from src.config import settings
 
-from src.adapters.api.dependencies import get_compiled_graph
+from src.adapters.dependencies import get_compiled_graph
 from src.application.workflow.generate_response import Agent
 from src.infrastructure.database.client import MongoClientWrapper
 from src.infrastructure.database.embeddings import get_hugging_face_embedding
@@ -15,7 +15,7 @@ from src.infrastructure.database.splitters import get_splitter
 from src.infrastructure.database.vector_stores import get_mongo_vector_store
 from src.infrastructure.llm.providers import get_groq_chat_model
 from src.infrastructure.tools.long_term_memory_tool import LongTermMemoryTool
-from src.infrastructure.tools.scrap import SearXNGWebSearchEngine
+from src.infrastructure.tools.metasearch_engine import SearXNGWebSearchEngine
 
 
 @asynccontextmanager

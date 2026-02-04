@@ -1,19 +1,20 @@
 import requests
-from src.application.memory.scraper import ScrapText, ScraperInterface
 
 from bs4 import BeautifulSoup
+from src.application.memory.metasearch_engine_int import Metasearch
+from src.config import settings
 
-
-class SearXNGWebSearchEngine():
+class SearXNGWebSearchEngine(Metasearch):
     def web_search(self, query: str) -> str:
-        url = "http://localhost:8888/search"
+        url = settings.METASEARCH_URL
         payload = {
             "q": query,
             "format": "json"
         }
+        urls_to_scrap = settings.URL_SCRAP_QUANTITY
 
         response = requests.post(url, data=payload).json()
-        urls = self.get_urls(data=response)
+        urls = self.get_urls(data=response, quantity=urls_to_scrap)
 
         data = []
         for url in urls:
@@ -22,7 +23,7 @@ class SearXNGWebSearchEngine():
             cleaned_content = self.clean_html(html=content)
 
             metadata = { 'source': url }
-            data.append(ScrapText(text=cleaned_content, metadata=metadata))
+            data.append({'text': cleaned_content, 'metadata': metadata})
 
         return data
         
