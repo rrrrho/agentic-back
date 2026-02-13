@@ -1,5 +1,4 @@
 from src.application.workflow.graph import create_workflow_graph
-from src.config import settings
 from langgraph.checkpoint.mongodb.aio import AsyncMongoDBSaver
 from langchain_core.tools import BaseTool
 

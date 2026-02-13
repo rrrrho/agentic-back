@@ -1,7 +1,7 @@
 from langchain_groq import ChatGroq
 from langchain_core.runnables import RunnableSequence
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from src.domain.prompts import CONTEXT_SUMMARY_PROMPT, CONTEXT_VALIDATION_PROMPT, EXTEND_SUMMARY_PROMPT, PERSONALITY_CARD, ROUTER_PROMPT, SUMMARY_PROMPT
+from src.domain.prompts import CONTEXT_SUMMARY_PROMPT, CONTEXT_VALIDATION_PROMPT, CONVERSATION_TITLE_PROMPT, EXTEND_SUMMARY_PROMPT, PERSONALITY_CARD, ROUTER_PROMPT, SUMMARY_PROMPT
 
 def get_router_chain(llm, tools: list) -> RunnableSequence:
 
@@ -73,3 +73,14 @@ def get_context_validation_chain(llm):
     )
 
     return prompt | llm
+
+def get_chat_title_chain(llm) -> str:
+    
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("human", CONVERSATION_TITLE_PROMPT.prompt)
+        ]
+    )
+    
+    return prompt | llm
+    

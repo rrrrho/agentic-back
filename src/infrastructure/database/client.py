@@ -1,3 +1,4 @@
+import datetime
 from typing import Generic, Type, TypeVar
 from bson import ObjectId
 from pydantic import BaseModel
@@ -54,4 +55,24 @@ class MongoClientWrapper(Generic[T]):
         """
 
         await self.client.close()
+
+    async def update_thread_title(self, thread_id: str, title: str):
+        db = self.client[self.database_name]
+        collection = db['threads_metadata']
+        
+        await collection.update_one(
+            {"thread_id": thread_id},
+            {"$set": {'title': title, 'updated_at': datetime.datetime.now()}},
+            upsert=True
+        )
+
+    async def create_thread_title(self, thread_id: str, title: str):
+        db = self.client[self.database_name]
+        collection = db['threads_metadata']
+        
+        await collection.insert_one({
+            'thread_id': thread_id,
+            'title': title,
+            'created_at': datetime.datetime.now()
+        })
 

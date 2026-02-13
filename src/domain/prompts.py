@@ -83,3 +83,16 @@ CONTEXT_VALIDATION_PROMPT = Prompt(
     name="context_validation_prompt",
     prompt=__CONTEXT_VALIDATION_PROMPT,
 )
+
+__CONVERSATION_TITLE_PROMPT = """
+Analyze the following conversation and generate a very brief title (maximum 5 words) 
+that summarizes the main topic. Do not use quotation marks or "Title:".
+
+Conversation:
+{conversation}
+"""
+
+CONVERSATION_TITLE_PROMPT = Prompt(
+    name="conversation_title_prompt",
+    prompt=__CONVERSATION_TITLE_PROMPT,
+)
