@@ -119,10 +119,16 @@ async def chat(sid, data):
                 full_response += chunk
                 await sio.emit('chunk', { 'text': chunk }, to=sid)
 
-            await sio.emit('response', 
-                { 'response': full_response, 'streaming': False, 'thread_id': thread_id, 'title': title }, 
-                to=sid
-            )
+            if title:
+                await sio.emit('response', 
+                    { 'response': full_response, 'streaming': False, 'thread_id': thread_id, 'title': title }, 
+                    to=sid
+                )
+            else:
+                await sio.emit('response', 
+                    { 'response': full_response, 'streaming': False }, 
+                    to=sid
+                )
 
         except Exception as err:
             await sio.emit('error', { 'error': str(err) }, to=sid)

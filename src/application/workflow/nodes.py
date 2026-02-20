@@ -2,6 +2,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import RemoveMessage
 from langgraph.prebuilt import ToolNode
 from langchain_core.tools import BaseTool
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from src.application.workflow.chains import get_context_summary_chain, get_context_validation_chain, get_conversation_summary_chain, get_response_chain, get_router_chain
 from src.domain.state import CustomState
@@ -15,12 +16,34 @@ def make_router_node(llm, tools: list[BaseTool]):
     async def router_node(state: CustomState, config: RunnableConfig) -> CustomState:
         retries = state.get('retry_count', 0)
         user_query = state.get('user_query', '')
+        messages = state['messages']
 
         if not user_query:
             user_query = next(
                 (m.content for m in reversed(state['messages']) if m.type == 'human'), 
                 "información general"
             )
+
+        tool_iterations = 0
+        for i in range(len(messages) - 1, -1, -1):
+            msg = messages[i]
+            
+            if isinstance(msg, HumanMessage):
+                break
+                
+            if isinstance(msg, AIMessage) and msg.tool_calls:
+                tool_iterations += 1
+
+        if tool_iterations >= settings.MAX_TOP_ITERATIONS:
+            fallback_message = AIMessage(
+                content='I have gathered enough information (tool limit reached). I will now respond.'
+            )
+
+            return {
+                'messages': fallback_message,
+                'user_query': user_query,
+                'retry_count': 0
+            }
 
         router_chain = get_router_chain(llm, tools=tools)
 
@@ -33,10 +56,7 @@ def make_router_node(llm, tools: list[BaseTool]):
             config
         )
 
-        if response.tool_calls:
-            return { 'messages': response, 'user_query': user_query }
-        
-        return { 'user_query': user_query }
+        return { 'messages': response, 'user_query': user_query }
     
     return router_node
 

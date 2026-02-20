@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     RAG_CHUNK_SIZE: int = 256
     RAG_SCORE_THRESHOLD: float = 1
 
+    # --- Tools Configuratiob ---
+    MAX_TOP_ITERATIONS: int = 3
+
     # --- Metasearch Configuration ---
     METASEARCH_URL: str = "http://localhost:8888/search"
     URL_SCRAP_QUANTITY: int = 5
