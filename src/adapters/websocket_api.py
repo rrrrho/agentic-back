@@ -22,6 +22,7 @@ from src.infrastructure.tools.long_term_memory_tool import LongTermMemoryTool
 from src.infrastructure.tools.metasearch_engine import SearXNGWebSearchEngine
 
 from src.adapters.http_api import router as http_router
+from src.adapters.users_api import router as users_router
 
 
 @asynccontextmanager
@@ -52,6 +53,7 @@ async def lifespan(app: FastAPI):
 
 fastapi_app = FastAPI(lifespan=lifespan)
 fastapi_app.include_router(http_router)
+fastapi_app.include_router(users_router)
 
 fastapi_app.add_middleware(
     CORSMiddleware,
