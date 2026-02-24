@@ -14,8 +14,6 @@ async def get_chat_history(request: Request, thread_id: str):
     except Exception as e:
         print(f"err: {e}")
         return []
-    
-    print(state_snapshot)
 
     if not state_snapshot:
         return []
@@ -24,6 +22,10 @@ async def get_chat_history(request: Request, thread_id: str):
     
     formatted_history = []
     for msg in messages:
+
+        if msg.type == "tool" or (msg.type == "ai" and not msg.content):
+            continue
+
         role = "USER" if msg.type == "human" else "AI"
         formatted_history.append({
             "id": msg.id or str(uuid.uuid4()),

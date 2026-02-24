@@ -56,7 +56,7 @@ def make_router_node(llm, tools: list[BaseTool]):
             config
         )
 
-        return { 'messages': response, 'user_query': user_query }
+        return { 'user_query': user_query }
     
     return router_node
 

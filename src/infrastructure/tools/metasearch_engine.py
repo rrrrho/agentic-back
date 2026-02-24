@@ -13,17 +13,30 @@ class SearXNGWebSearchEngine(Metasearch):
         }
         urls_to_scrap = settings.URL_SCRAP_QUANTITY
 
-        response = requests.post(url, data=payload).json()
+        try:
+            response = requests.post(url, data=payload, timeout=5).json()
+        except requests.exceptions.RequestException as e:
+            print(f"error connecting to SearXNG: {e}")
+            return []
+
         urls = self.get_urls(data=response, quantity=urls_to_scrap)
 
         data = []
         for url in urls:
-            html = requests.get(url)
-            content = BeautifulSoup(html.content, 'html.parser')
-            cleaned_content = self.clean_html(html=content)
+            try: 
+                html = requests.get(url, timeout=10)
 
-            metadata = { 'source': url }
-            data.append({'text': cleaned_content, 'metadata': metadata})
+                html.raise_for_status()
+
+                content = BeautifulSoup(html.content, 'html.parser')
+                cleaned_content = self.clean_html(html=content)
+
+                metadata = { 'source': url }
+                data.append({'text': cleaned_content, 'metadata': metadata})
+
+            except requests.RequestException as err:
+                print(f"URL {url} timeout: {err}")
+                continue
 
         return data
         
