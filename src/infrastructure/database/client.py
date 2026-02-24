@@ -1,9 +1,7 @@
 import datetime
 from typing import Generic, Type, TypeVar
-from bson import ObjectId
 from pydantic import BaseModel
 from pymongo import AsyncMongoClient
-from pymongo.errors import PyMongoError
 from src.config import settings
 from langgraph.checkpoint.mongodb.aio import AsyncMongoDBSaver
 
@@ -75,4 +73,34 @@ class MongoClientWrapper(Generic[T]):
             'title': title,
             'created_at': datetime.datetime.now()
         })
+
+    async def delete_thread(self, thread_id: str):
+        db = self.client[self.database_name]
+        threads_collection = db['threads_metadata']
+        checkpoints_collection = db['agentic_back_checkpoints']
+        writes_collection = db['agentic_back_writes']
+
+        async def perform_delete(session):
+            await checkpoints_collection.delete_many(
+                {"thread_id": thread_id}, 
+                session=session
+            )
+            await threads_collection.delete_one(
+                {"thread_id": thread_id}, 
+                session=session
+            )
+            await writes_collection.delete_many(
+                {"thread_id": thread_id},
+                session=session
+            )
+
+        async with self.client.start_session() as session:
+            try:
+
+                await session.with_transaction(perform_delete)
+                print(f"Conversación {thread_id} eliminada con éxito.")
+                
+            except Exception as err:
+                print(f"Error en la transacción, rollback automático aplicado. Error: {err}")
+                raise err
 

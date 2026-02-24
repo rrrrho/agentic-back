@@ -1,6 +1,5 @@
 import uuid
 from fastapi import APIRouter, Request
-from src.config import settings
 
 router = APIRouter()
 
@@ -56,3 +55,10 @@ async def get_threads(request: Request):
 
     except Exception as e:
         return {'threads': [], 'error': str(e)}
+    
+@router.delete('/chat/threads/{thread_id}')
+async def delete_thread(request: Request, thread_id: str):
+    client = request.app.state.mongo_db
+    await client.delete_thread(thread_id)
+
+    return { 'status': 'success', 'message': f'thread {thread_id} deleted successfully.' }
