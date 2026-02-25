@@ -103,15 +103,3 @@ class MongoClientWrapper(Generic[T]):
             except Exception as err:
                 print(f"Error en la transacción, rollback automático aplicado. Error: {err}")
                 raise err
-
-    async def add_user(self, user_name: str, user_email: str, user_password: str):
-        db = self.client[self.database_name]
-        users_collection = db['users']
-
-        await users_collection.insert_one(
-            {
-                'name': user_name,
-                'email': user_email,
-                'password': user_password
-            }
-        )
