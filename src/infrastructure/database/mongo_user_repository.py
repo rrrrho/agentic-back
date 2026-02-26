@@ -31,3 +31,8 @@ class MongoUserRepository(UserRepository):
                 'password': user.password
             }
         )
+
+    async def get_user_by_email(self, email: str):
+        user = await self.collection.find_one({'email': email}, {'_id': 0})
+        user['password'] = user['password'].decode('utf-8') if user and 'password' in user else None
+        return user

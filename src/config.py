@@ -40,5 +40,9 @@ class Settings(BaseSettings):
     METASEARCH_URL: str = "http://localhost:8888/search"
     URL_SCRAP_QUANTITY: int = 5
 
+    # --- Auth Configuration ---
+    AUTH_JWT_SECRET: str
+    AUTH_JWT_ALGORITHM: str
+    AUTH_JWT_EXP_DELTA_SECONDS: int = 3600
 
 settings = Settings()

@@ -18,4 +18,8 @@ class UserService:
 
         await self.repository.create_user(user)
 
+    async def get_user_by_email(self, user_email):
+        user = await self.repository.get_user_by_email(user_email)
+        return user
+
         
