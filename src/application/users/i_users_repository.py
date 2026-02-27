@@ -3,7 +3,7 @@ from abc import ABC
 from src.domain.user import User
 
 class UserRepository(ABC):
-    async def create_user(self, user: User):
+    async def create_user(self, user: User) -> str:
         pass
 
     async def get_user_by_email(self, email: str) -> User:

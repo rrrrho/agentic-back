@@ -1,5 +1,10 @@
+from typing import Annotated
 import uuid
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, HTTPException, Header, Request, status
+
+from src.adapters.dependencies import get_thread_service
+from src.adapters.utilities import decode_token
+from src.application.threads.threads_service import ThreadService
 
 router = APIRouter()
 
@@ -34,31 +39,23 @@ async def get_chat_history(request: Request, thread_id: str):
         
     return formatted_history
 
-@router.get('/chat/threads')
-async def get_threads(request: Request):
-
-    db = request.app.state.mongo_db
-    metadata_collection = db.database['threads_metadata']
-
+@router.get('/chat/threads', status_code=status.HTTP_200_OK)
+async def get_threads(my_user: Annotated[dict, Depends(decode_token)], service: ThreadService = Depends(get_thread_service)):
+    print(my_user)
     try:
-        cursor = metadata_collection.find({})
-        threads_list = await cursor.to_list(length=100)
-        
-        result = []
-        for t in threads_list:
-            result.append({
-                'id': t['thread_id'],
-                'title': t.get('title', 'New conversation')
-            })
+        threads = await service.get_threads_by_user_id(user_id=my_user['_id'])
             
-        return {'threads': result}
+        return { 'threads' : threads }
 
-    except Exception as e:
-        return {'threads': [], 'error': str(e)}
+    except Exception as err:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(err)
+        )
     
-@router.delete('/chat/threads/{thread_id}')
-async def delete_thread(request: Request, thread_id: str):
-    client = request.app.state.mongo_db
-    await client.delete_thread(thread_id)
+@router.delete('/chat/threads/{thread_id}', status_code=status.HTTP_204_NO_CONTENT)
+async def delete_thread(thread_id: str, service: ThreadService = Depends(get_thread_service)):
+    await service.delete_thread(thread_id)
 
-    return { 'status': 'success', 'message': f'thread {thread_id} deleted successfully.' }
+    return { 'message': f'thread {thread_id} deleted successfully.' }

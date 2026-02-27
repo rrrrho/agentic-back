@@ -1,4 +1,5 @@
 import uuid
+from bson import ObjectId
 from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage
 from typing import Any, AsyncGenerator, Union
 
@@ -47,7 +48,7 @@ class Agent:
 
     async def get_response(self, messages: str | list[str] | list[dict[str, any]], thread_id: str) -> AsyncGenerator[str, None]:
                 
-        config = { "configurable": { "thread_id": thread_id } }
+        config = { "configurable": { 'thread_id': ObjectId(thread_id) } }
 
         # asStream emits events for every action the agent performs. doesn't wait for end result.
         async for chunk in self.graph.astream(

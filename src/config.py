@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     MONGO_STATE_WRITES_COLLECTION: str = 'agentic-back-writes'
     MONGO_LONG_TERM_MEMORY_COLLECTION: str = 'agentic-back-long_term_memory'
     MONGO_USERS_COLLECTION: str = 'agentic-back-users'
+    MONGO_THREAD_METADATA_COLLECTION: str = 'threads_metadata'
 
     # --- Summary Configuration ---
     TOTAL_MESSAGES_AFTER_SUMMARY: int = 5
