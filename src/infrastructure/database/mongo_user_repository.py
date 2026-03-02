@@ -1,6 +1,5 @@
 from src.application.users.i_users_repository import UserRepository
 from src.config import settings
-from bson import ObjectId
 
 class MongoUserRepository(UserRepository):
 
@@ -27,5 +26,4 @@ class MongoUserRepository(UserRepository):
 
     async def get_user_by_email(self, email: str):
         user = await self.collection.find_one({ 'email': email }, { 'password': 0 })
-        user['_id'] = str(user['_id'])
         return user

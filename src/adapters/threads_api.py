@@ -1,6 +1,6 @@
 from typing import Annotated
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, Header, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from src.adapters.dependencies import get_thread_service
 from src.adapters.utilities import decode_token

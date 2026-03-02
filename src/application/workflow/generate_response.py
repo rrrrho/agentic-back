@@ -15,20 +15,18 @@ class Agent:
         count = len(messages)
         should_update = count == 2 or (count > 0 and count % 10 == 0) or count == 1
 
-        print(messages)
-
         if not should_update:
             return
         
         text_parts = []
         for m in messages:
-            # CASO A: Es un objeto de LangChain (HumanMessage, AIMessage)
+            # LangChain object (HumanMessage, AIMessage)
             if hasattr(m, 'content'):
                 text_parts.append(f"{m.type}: {m.content}")
-            # CASO B: Es un diccionario simple {'role': '...', 'content': '...'}
+            # simple dic {'role': '...', 'content': '...'}
             elif isinstance(m, dict):
                 text_parts.append(f"{m.get('role')}: {m.get('content')}")
-            # CASO C: Es un string suelto
+            # string
             else:
                 text_parts.append(f"user: {str(m)}")
 
@@ -48,7 +46,7 @@ class Agent:
 
     async def get_response(self, messages: str | list[str] | list[dict[str, any]], thread_id: str) -> AsyncGenerator[str, None]:
                 
-        config = { "configurable": { 'thread_id': ObjectId(thread_id) } }
+        config = { 'configurable': { 'thread_id': ObjectId(thread_id) } }
 
         # asStream emits events for every action the agent performs. doesn't wait for end result.
         async for chunk in self.graph.astream(
@@ -83,15 +81,15 @@ class Agent:
 
             if (
                 isinstance(messages[0], dict)
-                and "role" in messages[0]
-                and "content" in messages[0]
+                and 'role' in messages[0]
+                and 'content' in messages[0]
             ):
                 result = []
                 for msg in messages:
-                    if msg["role"] == "user":
-                        result.append(HumanMessage(content=msg["content"]))
-                    elif msg["role"] == "assistant":
-                        result.append(AIMessage(content=msg["content"]))
+                    if msg['role'] == 'user':
+                        result.append(HumanMessage(content=msg['content']))
+                    elif msg['role'] == 'assistant':
+                        result.append(AIMessage(content=msg['content']))
                 return result
 
             return [HumanMessage(content=message) for message in messages]
