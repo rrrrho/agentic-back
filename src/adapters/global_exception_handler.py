@@ -7,6 +7,17 @@ from src.application.exceptions.user.user_not_found_ex import UserNotFoundExcept
 
 def add_exception_handlers(app):
 
+    @app.exception_handler(AttributeError)
+    async def attr_exception_handler(request: Request, exc: AttributeError):
+        return JSONResponse(
+            status_code=422, 
+            content={
+                'status': 'error',
+                'code': 'INTERNAL_SERVER_ERROR',
+                'message': exc.obj
+            },
+        )
+
     @app.exception_handler(DomainException)
     async def domain_exception_handler(request: Request, exc: DomainException):
         return JSONResponse(

@@ -36,7 +36,7 @@ def make_router_node(llm, tools: list[BaseTool]):
 
         if tool_iterations >= settings.MAX_TOP_ITERATIONS:
             fallback_message = AIMessage(
-                content='I have gathered enough information (tool limit reached). I will now respond.'
+                content='I have gathered enough information (tool limit reached). I will now redirect.'
             )
 
             return {
@@ -47,14 +47,21 @@ def make_router_node(llm, tools: list[BaseTool]):
 
         router_chain = get_router_chain(llm, tools=tools)
 
-        response = await router_chain.ainvoke(
-            {
-                'messages': state['messages'],
-                'user_query': user_query,
-                'retry_count': retries
-            },
-            config
-        )
+        try:
+            response = await router_chain.ainvoke(
+                {
+                    'messages': state['messages'],
+                    'user_query': user_query,
+                    'retry_count': retries
+                },
+                config
+            )
+        except Exception as e:
+            print(f"\n🚨 ERROR CRÍTICO EN EL ROUTER: {e}\n")
+            return { 'user_query': user_query }
+        
+        if hasattr(response, 'tool_calls') and len(response.tool_calls) > 0:
+            return { 'messages': response, 'user_query': user_query }
 
         return { 'user_query': user_query }
     

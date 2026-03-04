@@ -15,7 +15,10 @@ def create_search_database_tool(retriever: LongMemoryToolInterface):
     @tool
     async def search_database(query: str):
         '''
+        DATABASE SEARCH TOOL
         Use this tool to perform a search in the vector database based on the provided query.
+        Args:
+            query (str): what you want to recopile information.
         '''
         docs = await retriever.search_database(query=query)
 
@@ -30,6 +33,7 @@ def create_web_search_tool(retriever: LongMemoryToolInterface):
     @tool
     async def web_search(query: str):
         '''
+        WEB SEARCH TOOL
         Use this tool to perform a web search based on the provided input query.
         Args:
             query (str): what you want to recopile information.

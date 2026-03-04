@@ -19,7 +19,7 @@ def create_workflow_graph(llm, poor_llm, tools: list[BaseTool]) -> StateGraph[Cu
     conversation_node = make_conversation_node(llm=llm)
     summarize_conversation_node = make_summarize_conversation_node(llm=poor_llm)
     summarize_context_node = make_context_summary_node(llm=poor_llm)
-    router_node = make_router_node(llm=poor_llm, tools=tools)
+    router_node = make_router_node(llm=llm, tools=tools)
     context_validation_node = make_context_validation_node(llm=poor_llm)
 
     # adding nodes

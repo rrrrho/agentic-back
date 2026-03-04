@@ -23,6 +23,7 @@ from src.infrastructure.tools.metasearch_engine import SearXNGWebSearchEngine
 
 from src.adapters.threads_api import router as http_router
 from src.adapters.users_api import router as users_router
+from src.adapters.agent_api import router as agent_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -64,6 +65,7 @@ fastapi_app = FastAPI(lifespan=lifespan)
 add_exception_handlers(fastapi_app)
 fastapi_app.include_router(http_router)
 fastapi_app.include_router(users_router)
+fastapi_app.include_router(agent_router)
 
 fastapi_app.add_middleware(
     CORSMiddleware,

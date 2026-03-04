@@ -1,6 +1,6 @@
 import uuid
 from bson import ObjectId
-from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage
+from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage, RemoveMessage
 from typing import Any, AsyncGenerator, Union
 
 from langchain_core.runnables import Runnable
@@ -39,7 +39,7 @@ class Agent:
 
 
     async def get_state(self, thread_id: str) -> list:
-        config = { 'configurable': { 'thread_id': thread_id } }
+        config = { 'configurable': { 'thread_id': ObjectId(thread_id) } }
         state_snapshot = await self.graph.aget_state(config)
 
         return state_snapshot
@@ -95,6 +95,34 @@ class Agent:
             return [HumanMessage(content=message) for message in messages]
 
         return []
+    
+    async def regenerate_response(self, thread_id: str) -> AsyncGenerator[str, None]:
+        config = { 'configurable': { 'thread_id': ObjectId(thread_id) } }
+        state = await self.graph.aget_state(config)
+        messages = state.values.get('messages', [])
+
+        if not messages:
+            raise ValueError('no history found.')
+
+        last_human_msg = None
+        messages_to_remove = []
+
+        for msg in reversed(messages):
+            messages_to_remove.append(RemoveMessage(id=msg.id))
+            
+            if msg.type == 'human':
+                last_human_msg = msg
+                break
+
+        if not last_human_msg:
+            raise ValueError('no user message found.')
+
+        await self.graph.aupdate_state(config, {"messages": messages_to_remove})
+
+        response_stream = self.get_response(messages=last_human_msg.content, thread_id=thread_id)
+
+        async for chunk in response_stream:
+            yield chunk
 
 
       

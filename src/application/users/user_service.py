@@ -32,10 +32,12 @@ class UserService:
     async def get_user_by_email(self, user_email):
         user = await self.repository.get_user_by_email(user_email)
 
+        print(user)
+
         if not user:
             raise UserNotFoundException('user not found.')
 
-        user._id= str(user._id)
+        user['_id']= str(user['_id'])
         return user
 
         

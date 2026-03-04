@@ -1,4 +1,3 @@
-from langchain_groq import ChatGroq
 from langchain_core.runnables import RunnableSequence
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from src.domain.prompts import CONTEXT_SUMMARY_PROMPT, CONTEXT_VALIDATION_PROMPT, CONVERSATION_TITLE_PROMPT, EXTEND_SUMMARY_PROMPT, PERSONALITY_CARD, ROUTER_PROMPT, SUMMARY_PROMPT
@@ -18,13 +17,6 @@ def get_router_chain(llm, tools: list) -> RunnableSequence:
     return prompt | llm_with_tools
 
 def get_response_chain(llm) -> RunnableSequence:
-    '''
-    injects state variables into prompt template and adds message historial to context
-
-    returns: 
-        ChatPromptTemplate
-        ChatGroq
-    '''
     system_message = PERSONALITY_CARD
 
     prompt = ChatPromptTemplate.from_messages(

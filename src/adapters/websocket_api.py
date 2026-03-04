@@ -38,6 +38,7 @@ async def chat(sid, data):
 
     session = await sio.get_session(sid)
     user_id = session.get('user_id')
+    
 
     try:
         if 'message' not in data:

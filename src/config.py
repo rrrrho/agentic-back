@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     # --- GROQ Configuration ---
     GROQ_API_KEY: str
-    GROQ_LLM_MODEL: str = 'meta-llama/llama-4-scout-17b-16e-instruct'
+    GROQ_LLM_MODEL: str = 'llama-3.3-70b-versatile'
     GROQ_SUMMARY_LLM_MODEL: str = 'llama-3.1-8b-instant'
 
     # --- MongoDB Configuration ---
