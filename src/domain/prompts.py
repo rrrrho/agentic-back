@@ -98,3 +98,33 @@ CONVERSATION_TITLE_PROMPT = Prompt(
     name="conversation_title_prompt",
     prompt=__CONVERSATION_TITLE_PROMPT,
 )
+
+__IMAGE_GENERATION_PROMPT = """
+Your job is to generate an image based on the user's requirements
+"""
+
+IMAGE_GENERATION_PROMPT = Prompt(
+    name="image_generation_prompt",
+    prompt=__IMAGE_GENERATION_PROMPT,
+)
+
+__TRANSLATOR_PROMPT = """
+You are an expert AI image prompt engineer. Your sole purpose is to analyze the provided conversation history and the user's request, and synthesize them into a SINGLE, highly detailed English prompt for an image generation model.
+
+CRITICAL RULES:
+1. NO CONVERSATIONAL FILLER: Output ONLY the final image prompt. Do not say "Here is the prompt," "Okay," or provide any explanations. 
+2. BE COMPREHENSIVE: Merge all previous visual requirements (colors, characters, setting) from the chat history with the new request.
+3. ADD EXPERT DETAILS: Enhance the prompt with professional photography or artistic keywords (e.g., lighting, camera angle, medium, atmosphere, rendering engine). 
+4. IF NO STYLE IS SPECIFIED: Default to "high-quality digital art, highly detailed, vivid colors, masterpiece".
+
+FORMAT YOUR OUTPUT EXACTLY LIKE THIS FORMULA:
+[Main Subject/Action] + [Setting/Background] + [Artistic Style/Medium] + [Lighting/Atmosphere] + [Technical details (e.g., 8k, Unreal Engine 5, volumetric lighting)].
+
+This is the user request: {{request}}
+"""
+
+TRANSLATOR_PROMPT = Prompt(
+    name="translator_prompt",
+    prompt=__TRANSLATOR_PROMPT,
+)
+

@@ -1,5 +1,3 @@
-
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -27,7 +25,7 @@ class Settings(BaseSettings):
     TOTAL_MESSAGES_SUMMARY_TRIGGER: int = 30
 
     # --- RAG Configuration ---
-    RAG_TEXT_EMBEDDING_MODEL_ID: str = "Qwen/Qwen3-Embedding-0.6B"
+    RAG_TEXT_EMBEDDING_MODEL_ID: str = 'Qwen/Qwen3-Embedding-0.6B'
     RAG_TEXT_EMBEDDING_MODEL_DIM: int = 1024
     RAG_TOP_K: int = 3
     RAG_DEVICE: str = "cpu"
@@ -38,12 +36,18 @@ class Settings(BaseSettings):
     MAX_TOP_ITERATIONS: int = 3
 
     # --- Metasearch Configuration ---
-    METASEARCH_URL: str = "http://localhost:8888/search"
+    METASEARCH_URL: str = 'http://localhost:8888/search'
     URL_SCRAP_QUANTITY: int = 5
 
     # --- Auth Configuration ---
     AUTH_JWT_SECRET: str
     AUTH_JWT_ALGORITHM: str
     AUTH_JWT_EXP_DELTA_SECONDS: int = 3600
+
+    # --- Open Router Configuration ---
+    OPEN_ROUTER_API_KEY: str
+    OPEN_ROUTER_MODEL: str = 'google/gemini-3.1-pro-preview'
+    OPEN_ROUTER_IMAGE_MODEL: str = 'google/gemini-2.5-flash-image'
+    OPEN_ROUTER_TRANSLATOR_MODER: str = 'openai/gpt-4.1-mini'
 
 settings = Settings()

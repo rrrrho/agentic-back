@@ -71,4 +71,15 @@ async def send_message(data: RegenerateRequest, request: Request):
             yield f"data: {chunk}\n\n"
 
     return StreamingResponse(token_generator(), media_type="text/event-stream")
+
+@router.post('/chat/image')
+async def send_message(data: ChatRequest, request: Request):
+
+    thread_id = data.thread_id
+    message = data.message
+    agent = request.app.state.agent
+            
+    response = await agent.generate_image(message=message, thread_id=thread_id)
+
+    return { 'message': response }
     

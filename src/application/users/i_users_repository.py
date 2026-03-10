@@ -15,3 +15,6 @@ class UserRepository(ABC):
     async def delete_user_by_id(self, user_id: str):
         pass
 
+    async def does_user_exists(self, email: str) -> bool:
+        pass
+

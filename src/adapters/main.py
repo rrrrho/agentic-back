@@ -10,14 +10,14 @@ from src.application.memory.long_term_memory_int import create_search_database_t
 from src.application.threads.threads_service import ThreadService
 from src.config import settings
 
-from src.adapters.dependencies import get_checkpointer, get_compiled_graph
-from src.application.workflow.generate_response import Agent
+from src.adapters.dependencies import get_checkpointer, get_compiled_graph, get_compiled_image_graph
+from src.application.workflow.generate_response import Agent, LanguageModels
 from src.infrastructure.database.embeddings import get_hugging_face_embedding
 from src.infrastructure.database.mongo_thread_repository import MongoThreadRepository
 from src.infrastructure.database.retrievers import get_mongo_hybrid_search_retriever
 from src.infrastructure.database.splitters import get_splitter
 from src.infrastructure.database.vector_stores import get_mongo_vector_store
-from src.infrastructure.llm.providers import get_groq_chat_model
+from src.infrastructure.llm.providers import get_groq_chat_model, get_open_router_chat_model
 from src.infrastructure.tools.long_term_memory_tool import LongTermMemoryTool
 from src.infrastructure.tools.metasearch_engine import SearXNGWebSearchEngine
 
@@ -50,11 +50,17 @@ async def lifespan(app: FastAPI):
     rag_tool = LongTermMemoryTool(vector_store=vector_store, splitter=splitter, retriever=retriever, web_search_engine=web_search_engine)
     tools = [create_search_database_tool(retriever=rag_tool), create_web_search_tool(retriever=rag_tool)]
 
-    llm = get_groq_chat_model(temperature=0.7, model_name=settings.GROQ_LLM_MODEL)
-    poor_llm = get_groq_chat_model(temperature=0.7, model_name=settings.GROQ_SUMMARY_LLM_MODEL)
+    #llm = get_groq_chat_model(temperature=0.7, model_name=settings.GROQ_LLM_MODEL)
+    chat_model = get_open_router_chat_model(temperature=0.7, model_name=settings.OPEN_ROUTER_MODEL)
+    #poor_llm = get_groq_chat_model(temperature=0.7, model_name=settings.GROQ_SUMMARY_LLM_MODEL)
+    summary_model = get_open_router_chat_model(temperature=0.7, model_name='openai/gpt-4.1-mini')
+    image_model = get_open_router_chat_model(temperature=0.7, model_name=settings.OPEN_ROUTER_IMAGE_MODEL)
 
-    graph = get_compiled_graph(checkpointer=checkpointer, tools=tools, llm=llm, poor_llm=poor_llm)
-    app.state.agent = Agent(graph=graph, llms=[ { 'tag': 'poor', 'model': poor_llm } ] )
+    graph = get_compiled_graph(checkpointer=checkpointer, tools=tools, llm=chat_model, poor_llm=summary_model)
+    image_graph = get_compiled_image_graph(checkpointer=checkpointer, translator_model=summary_model, image_generation_model=image_model)
+
+    models = LanguageModels(chat_model=chat_model, summary_model=summary_model, image_model=summary_model)
+    app.state.agent = Agent(graph=graph, image_graph=image_graph, llms=models)
 
     yield
 

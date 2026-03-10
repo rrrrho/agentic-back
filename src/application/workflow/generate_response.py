@@ -1,15 +1,35 @@
 import uuid
 from bson import ObjectId
+from langchain.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage, RemoveMessage
 from typing import Any, AsyncGenerator, Union
 
 from langchain_core.runnables import Runnable
+from pydantic import BaseModel
 from src.application.workflow.chains import get_chat_title_chain
 
+class LanguageModels(BaseModel):
+    chat_model: BaseChatModel
+    summary_model: BaseChatModel
+    image_model: BaseChatModel
+
 class Agent:
-    def __init__(self, graph: Runnable, llms = []):
+    def __init__(self, graph: Runnable, image_graph: Runnable, llms = LanguageModels):
         self.llms = llms
         self.graph = graph
+        self.image_graph = image_graph
+
+    async def generate_image(self, message: str, thread_id: str):
+        config = { 'configurable': { 'thread_id': ObjectId(thread_id) } }
+
+        response = await self.image_graph.ainvoke(
+            {
+                'request': message,
+            },
+            config= config
+        )
+
+        return response.get('image_url', '')
 
     async def get_chat_title(self, messages: list[str] | list[dict[str, any]]):
         count = len(messages)
@@ -31,7 +51,7 @@ class Agent:
                 text_parts.append(f"user: {str(m)}")
 
         conversation_text = "\n".join(text_parts)
-        llm = self.llms[0]['model']
+        llm = self.llms.summary_model
         chain = get_chat_title_chain(llm=llm)
     
         response = await chain.ainvoke({'conversation': conversation_text})
@@ -123,6 +143,5 @@ class Agent:
 
         async for chunk in response_stream:
             yield chunk
-
 
       

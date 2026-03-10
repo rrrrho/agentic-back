@@ -1,5 +1,6 @@
 from fastapi import Depends, Request
 from pydantic import BaseModel
+from src.application.image_workflow.graph import create_image_workflow_graph
 from src.application.threads.threads_service import ThreadService
 from src.application.users.user_service import UserService
 from src.application.workflow.graph import create_workflow_graph
@@ -13,6 +14,10 @@ from src.config import settings
 
 def get_compiled_graph(checkpointer: AsyncMongoDBSaver, tools: list[BaseTool], llm, poor_llm):
     builder = create_workflow_graph(tools=tools, llm=llm, poor_llm=poor_llm)
+    return builder.compile(checkpointer=checkpointer)
+
+def get_compiled_image_graph(checkpointer: AsyncMongoDBSaver, translator_model, image_generation_model):
+    builder = create_image_workflow_graph(translator_llm=translator_model, image_generation_llm=image_generation_model)
     return builder.compile(checkpointer=checkpointer)
 
 def get_client(request: Request):

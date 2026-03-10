@@ -2,7 +2,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import RemoveMessage
 from langgraph.prebuilt import ToolNode
 from langchain_core.tools import BaseTool
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage
 
 from src.application.workflow.chains import get_context_summary_chain, get_context_validation_chain, get_conversation_summary_chain, get_response_chain, get_router_chain
 from src.domain.state import CustomState
@@ -179,6 +179,7 @@ def make_context_summary_node(llm):
         return { 'context': response.content }
     
     return context_summary_node
+
 
 async def connector_node(state: CustomState):
     return {}

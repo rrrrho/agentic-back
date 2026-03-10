@@ -3,18 +3,19 @@ from fastapi.responses import JSONResponse
 
 from src.application.exceptions.domain_ex import DomainException
 from src.application.exceptions.user.user_already_exists import UserAlreadyExistsException
+from src.application.exceptions.user.user_not_authenticated import UserNotAuthenticated
 from src.application.exceptions.user.user_not_found_ex import UserNotFoundException
 
 def add_exception_handlers(app):
 
-    @app.exception_handler(AttributeError)
-    async def attr_exception_handler(request: Request, exc: AttributeError):
+    @app.exception_handler(Exception)
+    async def exception_handler(request: Request, exc: Exception):
         return JSONResponse(
-            status_code=422, 
+            status_code=500, 
             content={
                 'status': 'error',
                 'code': 'INTERNAL_SERVER_ERROR',
-                'message': exc.obj
+                'message': exc.args
             },
         )
 
@@ -55,6 +56,17 @@ def add_exception_handlers(app):
     async def bad_request_exception(request: Request, exc: UserAlreadyExistsException):
         return JSONResponse(
             status_code=400,
+            content={
+                'status': 'error',
+                'code': 'BAD_REQUEST',
+                'message': exc.message
+            },
+        )
+    
+    @app.exception_handler(UserNotAuthenticated)
+    async def user_not_authenticated_exception(request: Request, exc: UserNotAuthenticated):
+        return JSONResponse(
+            status_code=403,
             content={
                 'status': 'error',
                 'code': 'BAD_REQUEST',

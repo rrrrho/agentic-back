@@ -13,9 +13,9 @@ class UserService:
         if not user_email or not user_name or not user_password:
             raise BadRequestException('required params missing.')
         
-        existing_user = await self.get_user_by_email(user_email)
+        exists = await self.does_user_exists(user_email)
 
-        if existing_user:
+        if exists:
             raise UserAlreadyExistsException('user already exists.')
 
         salt = bcrypt.gensalt()
@@ -32,12 +32,17 @@ class UserService:
     async def get_user_by_email(self, user_email):
         user = await self.repository.get_user_by_email(user_email)
 
-        print(user)
-
         if not user:
             raise UserNotFoundException('user not found.')
 
         user['_id']= str(user['_id'])
         return user
+    
+    async def does_user_exists(self, user_email):
+        user = await self.repository.get_user_by_email(user_email)
+
+        if not user:
+            return False
+        return True
 
         
