@@ -11,9 +11,15 @@ from src.infrastructure.database.mongo_thread_repository import MongoThreadRepos
 from src.infrastructure.database.mongo_user_repository import MongoUserRepository
 
 from src.config import settings
+from src.infrastructure.llm.providers import get_open_router_chat_model
+
+models = {
+    'fast': get_open_router_chat_model(temperature=0.7, model_name='google/gemini-3-flash-preview'),
+    'reasoning': get_open_router_chat_model(temperature=0.7, model_name='google/gemini-3.1-pro-preview-customtools'),
+}
 
 def get_compiled_graph(checkpointer: AsyncMongoDBSaver, tools: list[BaseTool], llm, poor_llm):
-    builder = create_workflow_graph(tools=tools, llm=llm, poor_llm=poor_llm)
+    builder = create_workflow_graph(models=models, tools=tools, llm=llm, poor_llm=poor_llm)
     return builder.compile(checkpointer=checkpointer)
 
 def get_compiled_image_graph(checkpointer: AsyncMongoDBSaver, translator_model, image_generation_model):

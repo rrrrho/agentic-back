@@ -7,16 +7,16 @@ from src.domain.state import CustomState
 from langgraph.prebuilt import tools_condition
 from langchain_core.tools import BaseTool
 
-def create_workflow_graph(llm, poor_llm, tools: list[BaseTool]) -> StateGraph[CustomState]:
+def create_workflow_graph(models, llm, poor_llm, tools: list[BaseTool]) -> StateGraph[CustomState]:
     '''
     creates the decision graph.
 
     returns:
         StateGraph[CustomState]: class where the state, nodes and edges of the graph are defined, before it is compiled.
     '''
-    graph_builder = StateGraph(CustomState);
+    graph_builder = StateGraph(CustomState)
     retriever_node = make_retriever_node(tools=tools)
-    conversation_node = make_conversation_node(llm=llm)
+    conversation_node = make_conversation_node(llm=llm, models=models)
     summarize_conversation_node = make_summarize_conversation_node(llm=poor_llm)
     summarize_context_node = make_context_summary_node(llm=poor_llm)
     router_node = make_router_node(llm=llm, tools=tools)

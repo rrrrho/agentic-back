@@ -95,7 +95,7 @@ def make_context_validation_node(llm):
     return context_validation_node
 
 
-def make_conversation_node(llm):
+def make_conversation_node(llm, models):
 
     async def conversation_node(state: CustomState, config: RunnableConfig) -> CustomState:
         '''
@@ -114,7 +114,9 @@ def make_conversation_node(llm):
         '''
         summary = state.get('summary', '')
         context = state.get('context', '')
-        conversation_chain = get_response_chain(llm)
+        model_name = state.get('model_name', 'fast')
+        
+        conversation_chain = get_response_chain(models[model_name])
 
         '''
         response example:
@@ -133,6 +135,8 @@ def make_conversation_node(llm):
             },
             config
         )
+
+        response.additional_kwargs['model'] = model_name
 
         print(state['messages'])
         # updates list of messages

@@ -6,3 +6,4 @@ class CustomState(MessagesState):
     context: str
     retry_count: int = 0
     validation_status: str
+    model_name: str

@@ -64,13 +64,13 @@ class Agent:
 
         return state_snapshot
 
-    async def get_response(self, messages: str | list[str] | list[dict[str, any]], thread_id: str) -> AsyncGenerator[str, None]:
+    async def get_response(self, messages: str | list[str] | list[dict[str, any]], thread_id: str, model_name: str) -> AsyncGenerator[str, None]:
                 
         config = { 'configurable': { 'thread_id': ObjectId(thread_id) } }
 
         # asStream emits events for every action the agent performs. doesn't wait for end result.
         async for chunk in self.graph.astream(
-            input = { 'messages': self.__format_messages(messages=messages) },
+            input = { 'messages': self.__format_messages(messages=messages), 'model_name': model_name },
             config = config,
             stream_mode = 'messages'):
                 
@@ -123,6 +123,12 @@ class Agent:
 
         if not messages:
             raise ValueError('no history found.')
+        
+        last_msg = messages[-1]
+        
+        model = 'fast'
+        if last_msg.type == 'ai':
+            model = last_msg.additional_kwargs.get('model', 'fast')
 
         last_human_msg = None
         messages_to_remove = []
@@ -137,9 +143,11 @@ class Agent:
         if not last_human_msg:
             raise ValueError('no user message found.')
 
+        print(model)
+
         await self.graph.aupdate_state(config, {"messages": messages_to_remove})
 
-        response_stream = self.get_response(messages=last_human_msg.content, thread_id=thread_id)
+        response_stream = self.get_response(messages=last_human_msg.content, thread_id=thread_id, model_name=model)
 
         async for chunk in response_stream:
             yield chunk

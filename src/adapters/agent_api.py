@@ -15,6 +15,7 @@ router = APIRouter()
 class ChatRequest(BaseModel):
     message: str
     thread_id: Optional[str] = None
+    model_name: str
 
 class RegenerateRequest(BaseModel):
     thread_id: str
@@ -49,7 +50,7 @@ async def send_message(data: ChatRequest, request: Request, my_user: Annotated[d
         if title:
             await service.update_thread_title(thread_id, title)
             
-    response_stream = agent.get_response(messages=data.message, thread_id=thread_id)
+    response_stream = agent.get_response(messages=data.message, thread_id=thread_id, model_name=data.model_name)
 
     async def token_generator():
         yield f"data: {json.dumps({'type': 'metadata', 'thread_id': thread_id, 'title': title})}\n\n"
@@ -63,7 +64,7 @@ async def send_message(data: RegenerateRequest, request: Request):
 
     thread_id = data.thread_id
     agent = request.app.state.agent
-            
+    
     response_stream = agent.regenerate_response(thread_id=thread_id)
 
     async def token_generator():
@@ -73,7 +74,7 @@ async def send_message(data: RegenerateRequest, request: Request):
     return StreamingResponse(token_generator(), media_type="text/event-stream")
 
 @router.post('/chat/image')
-async def send_message(data: ChatRequest, request: Request):
+async def send_image_message(data: ChatRequest, request: Request):
 
     thread_id = data.thread_id
     message = data.message
